@@ -342,7 +342,7 @@
     let selectedSize = null;
     let items = [];
 
-    const services = ["Aeration", "Dethatching", "Cleanup", "Fertilizer", "Mulching"];
+    const services = ["Aeration", "Dethatching", "Cleanup", "Fertilizer", "Mulching", "Lawn Care"];
     const sizes = ["Small", "Medium", "Large", "Estate"];
 
     const prices = {
@@ -350,7 +350,8 @@
       Dethatching: { Small: 140, Medium: 180, Large: 220, Estate: 260 },
       Cleanup: { Small: 200, Medium: 350, Large: 550, Estate: 700 },
       Fertilizer: { Small: 350, Medium: 450, Large: 650, Estate: 750 },
-      Mulching: { Small: 130, Medium: 150, Large: 180, Estate: 200 }
+      Mulching: { Small: 130, Medium: 150, Large: 180, Estate: 200 },
+      "Lawn Care": { Small: 60, Medium: 85, Large: 105, Estate: 125 }
     };
 
     const servicesContainer = document.getElementById("services");
