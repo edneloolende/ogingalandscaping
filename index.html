@@ -181,6 +181,14 @@
       box-shadow: 0 12px 26px rgba(221, 178, 72, 0.34);
     }
 
+    .action-primary:disabled {
+      cursor: not-allowed;
+      background: linear-gradient(180deg, #d8d7cf 0%, #bdb8a8 100%);
+      color: rgba(47, 35, 4, 0.62);
+      box-shadow: none;
+      opacity: 0.8;
+    }
+
     .action-secondary {
       background: #f4f7f2;
       color: var(--primary-strong);
@@ -364,6 +372,7 @@
     const taxEl = document.getElementById("tax");
     const totalEl = document.getElementById("total");
     const toast = document.getElementById("toast");
+    const addButton = document.getElementById("add-button");
 
     let toastTimer = null;
 
@@ -386,6 +395,7 @@
     function updateSelectionSummary() {
       servicePill.textContent = "Service: " + (selectedService || "none");
       sizePill.textContent = "Size: " + (selectedSize || "none");
+      addButton.disabled = !(selectedService && selectedSize);
     }
 
     function renderButtons(list, container, type) {
@@ -488,7 +498,7 @@
       showToast("Quote reset.");
     }
 
-    document.getElementById("add-button").addEventListener("click", addItem);
+    addButton.addEventListener("click", addItem);
     document.getElementById("reset-button").addEventListener("click", resetQuote);
 
     renderButtons(services, servicesContainer, "service");
