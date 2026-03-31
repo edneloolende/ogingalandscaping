@@ -483,8 +483,14 @@
         price: prices[selectedService][selectedSize]
       });
 
+      const addedService = selectedService;
+      selectedService = null;
+      selectedSize = null;
+      servicesContainer.querySelectorAll(".choice-btn").forEach((btn) => btn.classList.remove("selected"));
+      sizesContainer.querySelectorAll(".choice-btn").forEach((btn) => btn.classList.remove("selected"));
+      updateSelectionSummary();
       renderQuote();
-      showToast(selectedService + " added.");
+      showToast(addedService + " added.");
     }
 
     function removeItem(index) {
