@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Oginga Yardscape Quote</title>
+  <style>
+    :root {
+      --bg: #eef4ea;
+      --surface: rgba(255, 255, 255, 0.92);
+      --surface-strong: #ffffff;
+      --text: #173120;
+      --muted: #55715d;
+      --primary: #245a38;
+      --primary-strong: #173f28;
+      --accent: #ddb248;
+      --accent-strong: #bf8f23;
+      --danger: #bd3a2f;
+      --border: rgba(36, 90, 56, 0.14);
+      --shadow: 0 18px 45px rgba(23, 49, 32, 0.12);
+      --radius: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(221, 178, 72, 0.18), transparent 28%),
+        linear-gradient(180deg, #f6f9f4 0%, #e8f0e3 100%);
+      color: var(--text);
+    }
+
+    .app {
+      width: min(100%, 760px);
+      margin: 0 auto;
+      padding: calc(20px + env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom));
+    }
+
+    .hero {
+      padding: 20px 18px;
+      border-radius: 26px;
+      background: linear-gradient(135deg, #214f33 0%, #2b6a44 100%);
+      color: #f7fbf5;
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      opacity: 0.75;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 7vw, 42px);
+      line-height: 1.02;
+    }
+
+    .hero p {
+      margin: 10px 0 0;
+      max-width: 36ch;
+      color: rgba(247, 251, 245, 0.82);
+      line-height: 1.5;
+    }
+
+    .panel {
+      margin-top: 16px;
+      padding: 18px;
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .panel-header h2 {
+      margin: 0;
+      font-size: 19px;
+    }
+
+    .panel-header span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .selection-summary {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .pill {
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(36, 90, 56, 0.08);
+      color: var(--primary-strong);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      font: inherit;
+      cursor: pointer;
+      transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+    }
+
+    .choice-btn {
+      min-height: 72px;
+      padding: 12px 14px;
+      border-radius: 18px;
+      text-align: left;
+      background: var(--surface-strong);
+      color: var(--text);
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 18px rgba(23, 49, 32, 0.07);
+    }
+
+    .choice-label {
+      display: block;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .choice-meta {
+      display: block;
+      margin-top: 4px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .choice-btn.selected {
+      background: linear-gradient(180deg, #2d7148 0%, #205637 100%);
+      color: #f6fbf3;
+      border-color: transparent;
+      box-shadow: 0 12px 30px rgba(32, 86, 55, 0.28);
+    }
+
+    .choice-btn.selected .choice-meta {
+      color: rgba(246, 251, 243, 0.78);
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .action-btn {
+      min-height: 56px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      font-weight: 700;
+    }
+
+    .action-primary {
+      background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%);
+      color: #2f2304;
+      box-shadow: 0 12px 26px rgba(221, 178, 72, 0.34);
+    }
+
+    .action-secondary {
+      background: #f4f7f2;
+      color: var(--primary-strong);
+      border: 1px solid var(--border);
+    }
+
+    .quote-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .empty-state {
+      padding: 18px;
+      border-radius: 16px;
+      text-align: center;
+      color: var(--muted);
+      background: rgba(36, 90, 56, 0.05);
+      border: 1px dashed rgba(36, 90, 56, 0.18);
+    }
+
+    .quote-line {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 14px;
+      border-radius: 16px;
+      background: #fbfdf9;
+      border: 1px solid var(--border);
+    }
+
+    .quote-line strong,
+    .quote-line span {
+      display: block;
+    }
+
+    .quote-line span {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .quote-line button {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(189, 58, 47, 0.12);
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .totals {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(36, 90, 56, 0.12);
+      display: grid;
+      gap: 10px;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 16px;
+    }
+
+    .total-row strong {
+      font-size: 22px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(18px + env(safe-area-inset-bottom));
+      transform: translateX(-50%) translateY(18px);
+      width: calc(100% - 32px);
+      max-width: 440px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(23, 49, 32, 0.92);
+      color: #f7fbf5;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 430px) {
+      .grid,
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      .quote-line {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="hero">
+      <p class="eyebrow">Mobile Quote Tool</p>
+      <h1>Oginga Yardscape Quote</h1>
+      <p>Pick a service, choose the property size, and build a quick quote right from your phone.</p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Build Quote</h2>
+        <span>Tap to select</span>
+      </div>
+
+      <div class="selection-summary">
+        <div class="pill" id="service-pill">Service: none</div>
+        <div class="pill" id="size-pill">Size: none</div>
+      </div>
+
+      <div class="panel-header">
+        <h2>Service</h2>
+      </div>
+      <div class="grid" id="services"></div>
+
+      <div class="panel-header" style="margin-top: 16px;">
+        <h2>Property Size</h2>
+      </div>
+      <div class="grid" id="sizes"></div>
+
+      <div class="actions">
+        <button class="action-btn action-primary" id="add-button">Add Service</button>
+        <button class="action-btn action-secondary" id="reset-button">Reset Quote</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Quote</h2>
+        <span id="item-count">0 items</span>
+      </div>
+
+      <div class="quote-list" id="quote"></div>
+
+      <div class="totals">
+        <div class="total-row"><span>Subtotal</span><span id="subtotal">$0.00</span></div>
+        <div class="total-row"><span>HST (13%)</span><span id="tax">$0.00</span></div>
+        <div class="total-row"><strong>Total</strong><strong id="total">$0.00</strong></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    let selectedService = null;
+    let selectedSize = null;
+    let items = [];
+
+    const services = ["Aeration", "Dethatching", "Cleanup", "Fertilizer"];
+    const sizes = ["Small", "Medium", "Large", "Estate"];
+
+    const prices = {
+      Aeration: { Small: 90, Medium: 120, Large: 150, Estate: 180 },
+      Dethatching: { Small: 140, Medium: 180, Large: 220, Estate: 260 },
+      Cleanup: { Small: 200, Medium: 350, Large: 550, Estate: 700 },
+      Fertilizer: { Small: 350, Medium: 450, Large: 650, Estate: 750 }
+    };
+
+    const servicesContainer = document.getElementById("services");
+    const sizesContainer = document.getElementById("sizes");
+    const quoteContainer = document.getElementById("quote");
+    const servicePill = document.getElementById("service-pill");
+    const sizePill = document.getElementById("size-pill");
+    const itemCount = document.getElementById("item-count");
+    const subtotalEl = document.getElementById("subtotal");
+    const taxEl = document.getElementById("tax");
+    const totalEl = document.getElementById("total");
+    const toast = document.getElementById("toast");
+
+    let toastTimer = null;
+
+    function formatCurrency(value) {
+      return new Intl.NumberFormat("en-CA", {
+        style: "currency",
+        currency: "CAD"
+      }).format(value);
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("visible");
+      window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => {
+        toast.classList.remove("visible");
+      }, 1800);
+    }
+
+    function updateSelectionSummary() {
+      servicePill.textContent = "Service: " + (selectedService || "none");
+      sizePill.textContent = "Size: " + (selectedSize || "none");
+    }
+
+    function renderButtons(list, container, type) {
+      container.innerHTML = "";
+
+      list.forEach((value) => {
+        const button = document.createElement("button");
+        button.className = "choice-btn";
+
+        const label = document.createElement("span");
+        label.className = "choice-label";
+        label.textContent = value;
+
+        const meta = document.createElement("span");
+        meta.className = "choice-meta";
+        meta.textContent = type === "service" ? "Service option" : "Property size";
+
+        button.append(label, meta);
+
+        button.addEventListener("click", () => {
+          if (type === "service") {
+            selectedService = value;
+            servicesContainer.querySelectorAll(".choice-btn").forEach((btn) => btn.classList.remove("selected"));
+          } else {
+            selectedSize = value;
+            sizesContainer.querySelectorAll(".choice-btn").forEach((btn) => btn.classList.remove("selected"));
+          }
+
+          button.classList.add("selected");
+          updateSelectionSummary();
+        });
+
+        container.appendChild(button);
+      });
+    }
+
+    function renderQuote() {
+      quoteContainer.innerHTML = "";
+
+      if (!items.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+        empty.textContent = "No services added yet.";
+        quoteContainer.appendChild(empty);
+      }
+
+      let subtotal = 0;
+
+      items.forEach((item, index) => {
+        subtotal += item.price;
+
+        const line = document.createElement("div");
+        line.className = "quote-line";
+
+        const details = document.createElement("div");
+        details.innerHTML = "<strong>" + item.service + "</strong><span>" + item.size + " lot • " + formatCurrency(item.price) + "</span>";
+
+        const removeButton = document.createElement("button");
+        removeButton.type = "button";
+        removeButton.textContent = "Remove";
+        removeButton.addEventListener("click", () => removeItem(index));
+
+        line.append(details, removeButton);
+        quoteContainer.appendChild(line);
+      });
+
+      const tax = subtotal * 0.13;
+      const total = subtotal + tax;
+
+      itemCount.textContent = items.length + (items.length === 1 ? " item" : " items");
+      subtotalEl.textContent = formatCurrency(subtotal);
+      taxEl.textContent = formatCurrency(tax);
+      totalEl.textContent = formatCurrency(total);
+    }
+
+    function addItem() {
+      if (!selectedService || !selectedSize) {
+        showToast("Select a service and size first.");
+        return;
+      }
+
+      items.push({
+        service: selectedService,
+        size: selectedSize,
+        price: prices[selectedService][selectedSize]
+      });
+
+      renderQuote();
+      showToast(selectedService + " added.");
+    }
+
+    function removeItem(index) {
+      items.splice(index, 1);
+      renderQuote();
+    }
+
+    function resetQuote() {
+      items = [];
+      renderQuote();
+      showToast("Quote reset.");
+    }
+
+    document.getElementById("add-button").addEventListener("click", addItem);
+    document.getElementById("reset-button").addEventListener("click", resetQuote);
+
+    renderButtons(services, servicesContainer, "service");
+    renderButtons(sizes, sizesContainer, "size");
+    updateSelectionSummary();
+    renderQuote();
+  </script>
+</body>
+</html>
