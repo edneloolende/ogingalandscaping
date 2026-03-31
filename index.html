@@ -327,9 +327,29 @@
       box-shadow: 0 0 0 4px rgba(191, 143, 35, 0.16);
     }
 
+    .share-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .share-link {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(36, 90, 56, 0.05);
+      border: 1px solid rgba(36, 90, 56, 0.12);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      word-break: break-all;
+    }
+
     @media (max-width: 430px) {
       .grid,
-      .actions {
+      .actions,
+      .share-actions {
         grid-template-columns: 1fr;
       }
 
@@ -343,11 +363,11 @@
   <main class="app">
     <section class="hero">
       <p class="eyebrow">Mobile Quote Tool</p>
-      <h1>Oginga Yardscape Quote</h1>
-      <p>Pick a service, choose the property size, and build a quick quote right from your phone.</p>
+      <h1 id="hero-title">Oginga Yardscape Quote</h1>
+      <p id="hero-copy">Pick a service, choose the property size, and build a quick quote right from your phone.</p>
     </section>
 
-    <section class="panel">
+    <section class="panel" id="build-panel">
       <div class="panel-header">
         <h2>Build Quote</h2>
         <span>Tap to select</span>
@@ -376,7 +396,7 @@
 
     <section class="panel">
       <div class="panel-header">
-        <h2>Quote</h2>
+        <h2 id="quote-title">Quote</h2>
         <span id="item-count">0 items</span>
       </div>
 
@@ -387,9 +407,16 @@
         <div class="total-row"><span>HST (13%)</span><span id="tax">$0.00</span></div>
         <div class="total-row"><strong>Total</strong><strong id="total">$0.00</strong></div>
       </div>
+
+      <div class="share-actions" id="share-actions">
+        <button class="action-btn action-primary" id="share-button">Share Quote</button>
+        <button class="action-btn action-secondary" id="copy-link-button">Copy Link</button>
+      </div>
+
+      <div class="share-link" id="share-link">Add at least one service to generate a quote link.</div>
     </section>
 
-    <section class="panel">
+    <section class="panel" id="install-panel">
       <div class="panel-header">
         <h2>Use On iPhone</h2>
         <span>Home Screen</span>
@@ -426,6 +453,8 @@
     const servicesContainer = document.getElementById("services");
     const sizesContainer = document.getElementById("sizes");
     const quoteContainer = document.getElementById("quote");
+    const buildPanel = document.getElementById("build-panel");
+    const installPanel = document.getElementById("install-panel");
     const servicePill = document.getElementById("service-pill");
     const sizePill = document.getElementById("size-pill");
     const itemCount = document.getElementById("item-count");
@@ -434,10 +463,23 @@
     const totalEl = document.getElementById("total");
     const toast = document.getElementById("toast");
     const addButton = document.getElementById("add-button");
+    const shareButton = document.getElementById("share-button");
+    const copyLinkButton = document.getElementById("copy-link-button");
+    const shareActions = document.getElementById("share-actions");
+    const shareLink = document.getElementById("share-link");
     const connectionLabel = document.getElementById("connection-label");
     const connectionDot = document.getElementById("connection-dot");
+    const heroTitle = document.getElementById("hero-title");
+    const heroCopy = document.getElementById("hero-copy");
+    const quoteTitle = document.getElementById("quote-title");
 
     const STORAGE_KEY = "oginga-yardscape-quote";
+    const QUOTE_QUERY_KEY = "quote";
+    const VIEW_QUERY_KEY = "view";
+    const SHARED_VIEW = "quote";
+
+    const url = new URL(window.location.href);
+    const isSharedView = url.searchParams.get(VIEW_QUERY_KEY) === SHARED_VIEW && url.searchParams.has(QUOTE_QUERY_KEY);
 
     let toastTimer = null;
 
@@ -458,6 +500,10 @@
     }
 
     function saveQuoteState() {
+      if (isSharedView) {
+        return;
+      }
+
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ items }));
     }
 
@@ -482,6 +528,126 @@
       } catch (error) {
         items = [];
       }
+    }
+
+    function encodeQuoteData(value) {
+      const json = JSON.stringify(value);
+      const bytes = new TextEncoder().encode(json);
+      let binary = "";
+      bytes.forEach((byte) => {
+        binary += String.fromCharCode(byte);
+      });
+      return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+    }
+
+    function decodeQuoteData(value) {
+      const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+      const padding = "=".repeat((4 - (normalized.length % 4 || 4)) % 4);
+      const binary = atob(normalized + padding);
+      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+      return JSON.parse(new TextDecoder().decode(bytes));
+    }
+
+    function loadSharedQuote() {
+      try {
+        const encoded = url.searchParams.get(QUOTE_QUERY_KEY);
+        if (!encoded) {
+          return false;
+        }
+
+        const parsed = decodeQuoteData(encoded);
+        if (!Array.isArray(parsed)) {
+          return false;
+        }
+
+        items = parsed.filter((item) =>
+          item &&
+          typeof item.service === "string" &&
+          typeof item.size === "string" &&
+          typeof item.price === "number"
+        );
+        return true;
+      } catch (error) {
+        items = [];
+        return false;
+      }
+    }
+
+    function getShareUrl() {
+      const shareUrl = new URL(window.location.href);
+      shareUrl.search = "";
+      shareUrl.hash = "";
+      shareUrl.searchParams.set(VIEW_QUERY_KEY, SHARED_VIEW);
+      shareUrl.searchParams.set(QUOTE_QUERY_KEY, encodeQuoteData(items));
+      return shareUrl.toString();
+    }
+
+    function updateShareState() {
+      if (isSharedView) {
+        shareActions.hidden = true;
+        shareLink.hidden = true;
+        return;
+      }
+
+      const hasItems = items.length > 0;
+      const link = hasItems ? getShareUrl() : "";
+
+      shareButton.disabled = !hasItems;
+      copyLinkButton.disabled = !hasItems;
+      shareLink.textContent = hasItems ? link : "Add at least one service to generate a quote link.";
+    }
+
+    async function copyShareLink() {
+      if (!items.length) {
+        return;
+      }
+
+      const link = getShareUrl();
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(link);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = link;
+        textArea.setAttribute("readonly", "true");
+        textArea.style.position = "absolute";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+      }
+      showToast("Quote link copied.");
+    }
+
+    async function shareQuote() {
+      if (!items.length) {
+        return;
+      }
+
+      const link = getShareUrl();
+
+      if (navigator.share) {
+        await navigator.share({
+          title: "Oginga Yardscape Quote",
+          text: "Here is your Oginga Yardscape quote.",
+          url: link
+        });
+        return;
+      }
+
+      await copyShareLink();
+    }
+
+    function applyViewMode() {
+      if (!isSharedView) {
+        return;
+      }
+
+      buildPanel.hidden = true;
+      installPanel.hidden = true;
+      heroTitle.textContent = "Oginga Yardscape Quote";
+      heroCopy.textContent = "Review this quote shared by Oginga Yardscape.";
+      quoteTitle.textContent = "Shared Quote";
     }
 
     function updateConnectionStatus() {
@@ -551,12 +717,16 @@
         const details = document.createElement("div");
         details.innerHTML = "<strong>" + item.service + "</strong><span>" + item.size + " lot • " + formatCurrency(item.price) + "</span>";
 
-        const removeButton = document.createElement("button");
-        removeButton.type = "button";
-        removeButton.textContent = "Remove";
-        removeButton.addEventListener("click", () => removeItem(index));
+        line.appendChild(details);
 
-        line.append(details, removeButton);
+        if (!isSharedView) {
+          const removeButton = document.createElement("button");
+          removeButton.type = "button";
+          removeButton.textContent = "Remove";
+          removeButton.addEventListener("click", () => removeItem(index));
+          line.appendChild(removeButton);
+        }
+
         quoteContainer.appendChild(line);
       });
 
@@ -568,6 +738,7 @@
       taxEl.textContent = formatCurrency(tax);
       totalEl.textContent = formatCurrency(total);
       saveQuoteState();
+      updateShareState();
     }
 
     function addItem() {
@@ -605,12 +776,27 @@
 
     addButton.addEventListener("click", addItem);
     document.getElementById("reset-button").addEventListener("click", resetQuote);
+    shareButton.addEventListener("click", () => {
+      shareQuote().catch(() => {
+        showToast("Could not open share sheet.");
+      });
+    });
+    copyLinkButton.addEventListener("click", () => {
+      copyShareLink().catch(() => {
+        showToast("Could not copy link.");
+      });
+    });
     window.addEventListener("online", updateConnectionStatus);
     window.addEventListener("offline", updateConnectionStatus);
 
+    applyViewMode();
     renderButtons(services, servicesContainer, "service");
     renderButtons(sizes, sizesContainer, "size");
-    loadQuoteState();
+    if (isSharedView) {
+      loadSharedQuote();
+    } else {
+      loadQuoteState();
+    }
     updateSelectionSummary();
     updateConnectionStatus();
     renderQuote();
