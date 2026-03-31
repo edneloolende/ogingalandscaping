@@ -299,6 +299,34 @@
       line-height: 1.45;
     }
 
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(36, 90, 56, 0.08);
+      color: var(--primary-strong);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #2f9e44;
+      box-shadow: 0 0 0 4px rgba(47, 158, 68, 0.16);
+      flex: 0 0 auto;
+    }
+
+    .status-dot.offline {
+      background: #bf8f23;
+      box-shadow: 0 0 0 4px rgba(191, 143, 35, 0.16);
+    }
+
     @media (max-width: 430px) {
       .grid,
       .actions {
@@ -369,6 +397,10 @@
       <div class="install-note">
         In Safari, tap Share, then choose Add to Home Screen to use this like an app on iPhone.
       </div>
+      <div class="status-row">
+        <span id="connection-label">Online and ready</span>
+        <span class="status-dot" id="connection-dot" aria-hidden="true"></span>
+      </div>
     </section>
   </main>
 
@@ -402,6 +434,10 @@
     const totalEl = document.getElementById("total");
     const toast = document.getElementById("toast");
     const addButton = document.getElementById("add-button");
+    const connectionLabel = document.getElementById("connection-label");
+    const connectionDot = document.getElementById("connection-dot");
+
+    const STORAGE_KEY = "oginga-yardscape-quote";
 
     let toastTimer = null;
 
@@ -419,6 +455,39 @@
       toastTimer = window.setTimeout(() => {
         toast.classList.remove("visible");
       }, 1800);
+    }
+
+    function saveQuoteState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ items }));
+    }
+
+    function loadQuoteState() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) {
+          return;
+        }
+
+        const parsed = JSON.parse(saved);
+        if (!parsed || !Array.isArray(parsed.items)) {
+          return;
+        }
+
+        items = parsed.items.filter((item) =>
+          item &&
+          typeof item.service === "string" &&
+          typeof item.size === "string" &&
+          typeof item.price === "number"
+        );
+      } catch (error) {
+        items = [];
+      }
+    }
+
+    function updateConnectionStatus() {
+      const isOnline = navigator.onLine;
+      connectionLabel.textContent = isOnline ? "Online and ready" : "Offline mode active";
+      connectionDot.classList.toggle("offline", !isOnline);
     }
 
     function updateSelectionSummary() {
@@ -498,6 +567,7 @@
       subtotalEl.textContent = formatCurrency(subtotal);
       taxEl.textContent = formatCurrency(tax);
       totalEl.textContent = formatCurrency(total);
+      saveQuoteState();
     }
 
     function addItem() {
@@ -535,10 +605,14 @@
 
     addButton.addEventListener("click", addItem);
     document.getElementById("reset-button").addEventListener("click", resetQuote);
+    window.addEventListener("online", updateConnectionStatus);
+    window.addEventListener("offline", updateConnectionStatus);
 
     renderButtons(services, servicesContainer, "service");
     renderButtons(sizes, sizesContainer, "size");
+    loadQuoteState();
     updateSelectionSummary();
+    updateConnectionStatus();
     renderQuote();
 
     if ("serviceWorker" in navigator) {
