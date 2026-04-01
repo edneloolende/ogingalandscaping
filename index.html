@@ -77,6 +77,13 @@
       line-height: 1.5;
     }
 
+    body.shared-view .hero p {
+      max-width: none;
+      white-space: nowrap;
+      font-size: 13px;
+      line-height: 1.3;
+    }
+
     .panel {
       margin-top: 16px;
       padding: 18px;
@@ -645,8 +652,9 @@
 
       buildPanel.hidden = true;
       installPanel.hidden = true;
+      document.body.classList.add("shared-view");
       heroTitle.textContent = "Oginga Yardscape Quote";
-      heroCopy.innerHTML = "Review this quote shared by <span style=\"white-space: nowrap;\">Oginga Yardscape.</span>";
+      heroCopy.textContent = "Review this quote shared by Oginga Yardscape.";
       quoteTitle.textContent = "Shared Quote";
     }
 
